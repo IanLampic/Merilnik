@@ -1,0 +1,1 @@
+To je aplikacija, ki izračuna porabo kalorij in poraba kisika za določeno gibanje(tek ali hoja). Prav tako pa shranjuje podatke, jih analizira in vrne različne vrednosti kot so povprečje meseca, dan, v katerem si največ pretekel, itd..
