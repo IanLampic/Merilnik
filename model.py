@@ -30,9 +30,6 @@ class MerilnikTeka:
             return 0.1
         else:
             return 0.2
-        """ 
-        enota za porabo kisika ml / kg min 
-        """
 
     def poraba_kisika_vertikalno(self):
         return 1.8
@@ -53,22 +50,13 @@ class MerilnikTeka:
         return str(round(float(self.poraba_kisika_s_tezo()[:-12]) * 5, 2)) + ' kcal'
 
 
-"""
-
-gibanje1 = DnevnikGibanja(...)
-gibanje2 = DnevnikGibanja(...)
-
-u = Uporabnik( (gibanje1, gibanje2) )
-
-"""
-
-
 class Uporabnik:
 
     def __init__(self, seznam_gibanj):
-        # seznam gibanj kot elemente vsebuje posamezna gibanja
-        # 1 uporabnik ima več gibanj.
         self.seznam_gibanj = seznam_gibanj
+        """
+        Seznam gibanj kot elemente vsebuje posamezna gibanja, 1 uporabnik ima več gibanj.
+        """
 
     @staticmethod
     def vrni_dan():
@@ -91,6 +79,7 @@ class Uporabnik:
             slovar_let[leto] = []
         return slovar_let
 
+    # TODO: Se tukaj uredi po datumih
     def razdeli_po_letih(self):
         slovar_let = self.naredi_slovar_aktualnih_let()
         for gibanje in self.seznam_gibanj:
@@ -115,23 +104,25 @@ class Uporabnik:
                 slovar_po_letih[leto] = seznam_za_mesece
         return slovar_po_letih
 
+    ############################################################################################################################################################
     # TODO: Ugotovi, kako znotraj meseca razvrstiti po dnevih.
-    """
-    Doda katerokoli gibanje.
-    """
 
     def izpisi_gibanja_teka(self):
         slovar_po_letih = self.razdeli_po_letih()
         for leto in slovar_po_letih.keys():
             vrednosti = slovar_po_letih[leto]
             seznam_za_mesece = [[] for i in range(1, 13)]
-            for vnos in vrednosti:
-                if int(vnos.datum.strftime("%Y")) == leto:
-                    seznam_za_mesece[int(vnos.datum.strftime("%m")) - 1].append(vnos.dolzina)
+            if vrednosti == []:
                 slovar_po_letih[leto] = seznam_za_mesece
+            else:
+                for vnos in vrednosti:
+                    if vnos.nacin:
+                        if int(vnos.datum.strftime("%Y")) == leto:
+                            seznam_za_mesece[int(vnos.datum.strftime("%m")) - 1].append(vnos.dolzina)
+                        slovar_po_letih[leto] = seznam_za_mesece
         return slovar_po_letih
 
-    # Spet potrebno urediti podatke po datumih
+    # TODO: Spet potrebno urediti podatke po datumih
     def vsota_gibanja_teka_po_mesecih(self):
         slovar_let = self.naredi_slovar_aktualnih_let()
         seznam_izpisov = self.izpisi_gibanja_teka()
@@ -148,9 +139,68 @@ class Uporabnik:
             slovar_let[leto] = seznam_vsot_gibanj
         return slovar_let
 
-    ######################################################
+    def povprečje_teka_po_mesecih(self):
+        slovar_let = self.naredi_slovar_aktualnih_let()
+        slovar_frekvenc_po_letih = self.naredi_slovar_aktualnih_let()
+        slovar_povprecij = self.naredi_slovar_aktualnih_let()
+        seznam_izpisov = self.izpisi_gibanja_teka()
+        for leto in seznam_izpisov.keys():
+            stevilo = 0
+            seznam_vsot_gibanj = []
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                if mesec == []:
+                    seznam_vsot_gibanj.append([])
+                else:
+                    for posamezen_tek in mesec:
+                        stevilo += round(float(posamezen_tek), 2)
+                    seznam_vsot_gibanj.append([round(stevilo, 2)])
+            slovar_let[leto] = seznam_vsot_gibanj
+        for leto in seznam_izpisov.keys():
+            frekvenca = 0
+            seznam_frekvenc_gibanj = []
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                if mesec == []:
+                    seznam_frekvenc_gibanj.append([])
+                else:
+                    for posamezen_tek in mesec:
+                        frekvenca += mesec.count(posamezen_tek)
+                    seznam_frekvenc_gibanj.append([frekvenca])
+            slovar_frekvenc_po_letih[leto] = seznam_frekvenc_gibanj
+        for leto in slovar_let.keys():
+            vrednosti = slovar_let[leto]
+            frekvenca = slovar_frekvenc_po_letih[leto]
+            stevilo = 0
+            if vrednosti == []:
+                slovar_povprecij[leto] = []
+            else:
+                seznam_mesecov = []
+                for i in range(len(vrednosti)):
+                    if vrednosti[i] == []:
+                        seznam_mesecov.append([])
+                    else:
+                        stevilo = round(vrednosti[i].pop() / frekvenca[i].pop(), 2)
+                        seznam_mesecov.append([stevilo])
+                slovar_povprecij[leto] = seznam_mesecov
+        return slovar_povprecij
+
+    def max_teka_za_vsak_mesec(self):
+        slovar_izpisov = self.izpisi_gibanja_teka()
+        slovar_maksimov = self.naredi_slovar_aktualnih_let()
+        stevilo = 0
+        for leto in slovar_izpisov.keys():
+            vrednosti = slovar_izpisov[leto]
+            for mesec in vrednosti:
+                if mesec == []:
+                    slovar_maksimov[leto].append([])
+                else:
+                    stevilo = max(mesec)
+                    slovar_maksimov[leto].append([stevilo])
+        return slovar_maksimov
+
     """
-    Naslednje tri funkcije, vrnejo analizo podatkov za leta.
+    Naslednje tri funkcije, vrnejo analizo podatkov za leta za tek.
     """
 
     def povprečje_teka_po_letih(self):
@@ -233,50 +283,92 @@ class Uporabnik:
                 prazen_seznam.append((leto, maks))
         return prazen_seznam
 
-    # TODO: Popravit povprečje tako, da res vzame samo tiste vrednosti, ki predstavljajo to leto, ne pa vseh,
-    # pomagaj si z povprečjem za leta, potrebna le rahla sprememba
-    def povprečje_teka_po_mesecih(self):
-        slovar_frekvenc_po_letih = self.naredi_slovar_aktualnih_let()
-        slovar_povprečij_po_letih = self.naredi_slovar_aktualnih_let()
-        seznam_vsot = self.vsota_gibanja_teka()
-        slovar_izpisov = self.izpisi_gibanja_teka()
-        seznam_frekvenc_gibanj = [[] for i in range(1, 13)]
-        seznam_frekvenc_gibanj_nov = []
-        slovar_povprečji_gibanj = self.naredi_slovar_aktualnih_let()
-        for leto in slovar_izpisov.keys():
-            vrednosti = slovar_izpisov[leto]
-            if vrednosti == []:
-                slovar_frekvenc_po_letih[leto] = []
-            else:
-                for mesec in vrednosti:
-                    indeks = vrednosti.index(mesec)
-                    for gibanje in mesec:
-                        frekvenca = mesec.count(gibanje)
-                        seznam_frekvenc_gibanj[indeks].append(frekvenca)
-                        slovar_frekvenc_po_letih[leto] = seznam_frekvenc_gibanj
-            # for mesec in seznam_frekvenc_gibanj:
-            #   stevilo = 0
-            #  if mesec == []:
-            #     seznam_frekvenc_gibanj_nov.append([])
-            # else:
-            #   for element in mesec:
-            #      stevilo = mesec.count(element)
-            # seznam_frekvenc_gibanj_nov.append([stevilo])
-            # slovar_frekvenc_po_letih[leto] = seznam_frekvenc_gibanj_nov
-        # for leto in seznam_vsot.keys():
-        #   vrednosti_vsot = seznam_vsot[leto]
-        #  vrednosti_frekvenc = slovar_frekvenc_po_letih[leto]
-        # seznam_povprečji_gibanj = slovar_povprečji_gibanj[leto]
-        # for i in range(len(vrednosti_frekvenc) - 1):
-        #   if vrednosti_frekvenc[i] == []:
-        #      seznam_povprečji_gibanj.append([])
-        # else:
-        #    seznam_povprečji_gibanj.append([round(vrednosti_vsot[i].pop() / vrednosti_frekvenc[i].pop(), 2)])
-        # slovar_povprečij_po_letih[leto] = seznam_povprečji_gibanj
-        return slovar_frekvenc_po_letih
+    """
+    Vse to funkcije, delujejo samo, kadar je oseba tekla, torej da je gibanje.nacin == True.
+    """
 
-    def maksimum_teka_za_vsak_mesec(self):
-        slovar_izpisov = self.izpisi_gibanja_teka()
+    ###################################################### ###################################################### ######################################################
+    def izpisi_gibanja_hoje(self):
+        slovar_po_letih = self.razdeli_po_letih()
+        for leto in slovar_po_letih.keys():
+            vrednosti = slovar_po_letih[leto]
+            seznam_izpisov_gibanj = [[] for i in range(1, 13)]
+            if vrednosti == []:
+                slovar_po_letih[leto] = seznam_izpisov_gibanj
+            else:
+                for vnos in vrednosti:
+                    if not vnos.nacin:
+                        if int(vnos.datum.strftime("%Y")) == leto:
+                            seznam_izpisov_gibanj[int(vnos.datum.strftime("%m")) - 1].append(vnos.dolzina)
+                    else:
+                        pass
+                        slovar_po_letih[leto] = seznam_izpisov_gibanj
+        return slovar_po_letih
+
+    def vsota_gibanja_hoje_po_mesecih(self):
+        slovar_let = self.naredi_slovar_aktualnih_let()
+        seznam_izpisov = self.izpisi_gibanja_hoje()
+        for leto in seznam_izpisov.keys():
+            stevilo = 0
+            seznam_vsot_gibanj = [[] for i in range(1, 13)]
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                for posamezen_tek in mesec:
+                    stevilo += round(float(posamezen_tek), 2)
+                for i in range(1, 13):
+                    if i == vrednosti.index(mesec):
+                        seznam_vsot_gibanj[i].append(round(stevilo, 2))
+            slovar_let[leto] = seznam_vsot_gibanj
+        return slovar_let
+
+    def povprečje_hoje_po_mesecih(self):
+        slovar_let = self.naredi_slovar_aktualnih_let()
+        slovar_frekvenc_po_letih = self.naredi_slovar_aktualnih_let()
+        slovar_povprecij = self.naredi_slovar_aktualnih_let()
+        seznam_izpisov = self.izpisi_gibanja_hoje()
+        for leto in seznam_izpisov.keys():
+            stevilo = 0
+            seznam_vsot_gibanj = []
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                if mesec == []:
+                    seznam_vsot_gibanj.append([])
+                else:
+                    for posamezen_tek in mesec:
+                        stevilo += round(float(posamezen_tek), 2)
+                    seznam_vsot_gibanj.append([round(stevilo, 2)])
+            slovar_let[leto] = seznam_vsot_gibanj
+        for leto in seznam_izpisov.keys():
+            frekvenca = 0
+            seznam_frekvenc_gibanj = []
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                if mesec == []:
+                    seznam_frekvenc_gibanj.append([])
+                else:
+                    for posamezen_tek in mesec:
+                        frekvenca += mesec.count(posamezen_tek)
+                    seznam_frekvenc_gibanj.append([frekvenca])
+            slovar_frekvenc_po_letih[leto] = seznam_frekvenc_gibanj
+        for leto in slovar_let.keys():
+            vrednosti = slovar_let[leto]
+            frekvenca = slovar_frekvenc_po_letih[leto]
+            stevilo = 0
+            if vrednosti == []:
+                slovar_povprecij[leto] = []
+            else:
+                seznam_mesecov = []
+                for i in range(len(vrednosti)):
+                    if vrednosti[i] == []:
+                        seznam_mesecov.append([])
+                    else:
+                        stevilo = round(vrednosti[i].pop() / frekvenca[i].pop(), 2)
+                        seznam_mesecov.append([stevilo])
+                slovar_povprecij[leto] = seznam_mesecov
+        return slovar_povprecij
+
+    def max_hoje_za_vsak_mesec(self):
+        slovar_izpisov = self.izpisi_gibanja_hoje()
         slovar_maksimov = self.naredi_slovar_aktualnih_let()
         stevilo = 0
         for leto in slovar_izpisov.keys():
@@ -289,92 +381,109 @@ class Uporabnik:
                     slovar_maksimov[leto].append([stevilo])
         return slovar_maksimov
 
-    """
-    Vse to funkcije, delujejo samo, kadar je oseba tekla, torej da je gibanje.nacin == True.
-    """
-
-    def izpisi_gibanja_hoje(self):
-        seznam_izpisov_gibanj = [[] for i in range(1, 13)]
-        for gibanje in self.seznam_gibanj:
-            for i in range(1, 13):
-                if not gibanje.nacin:
-                    d = gibanje.datum
-                    if int(d.strftime("%m")) == i:
-                        seznam_izpisov_gibanj[i - 1].append(gibanje.dolzina)
-        return seznam_izpisov_gibanj
-
-    def vsota_gibanja_hoje(self):
-        seznam_vsot_gibanj = [[] for i in range(1, 13)]
-        stevilo = 0
+    def povprečje_hoje_po_letih(self):
+        slovar_let = self.naredi_slovar_aktualnih_let()
+        slovar_frekvenc_po_letih = self.naredi_slovar_aktualnih_let()
         seznam_izpisov = self.izpisi_gibanja_hoje()
-        for mesec in seznam_izpisov:
-            for posamezen_tek in mesec:
-                stevilo += round(float(posamezen_tek), 2)
-            for i in range(1, 13):
-                if i == seznam_izpisov.index(mesec):
-                    seznam_vsot_gibanj[i].append(round(stevilo, 2))
-        return seznam_vsot_gibanj
-
-    def povprečje_mesecov_hoje(self):
-        seznam_vsot = self.vsota_gibanja_hoje()
-        seznam_izpisov = self.izpisi_gibanja_hoje()
-        seznam_frekvenc_gibanj = [[] for i in range(1, 13)]
-        seznam_frekvenc_gibanj_nov = []
-        seznam_povprečji_gibanj = []
-        for mesec in seznam_izpisov:
-            indeks = seznam_izpisov.index(mesec)
-            frekvenca = 0
-            for gibanje in mesec:
-                frekvenca = mesec.count(gibanje)
-                seznam_frekvenc_gibanj[indeks].append(frekvenca)
-        for mesec in seznam_frekvenc_gibanj:
+        slovar_povprecij = self.naredi_slovar_aktualnih_let()
+        for leto in seznam_izpisov.keys():
             stevilo = 0
-            if mesec == []:
-                seznam_frekvenc_gibanj_nov.append([])
+            seznam_vsot_gibanj = [[] for i in range(1, 13)]
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                for posamezen_tek in mesec:
+                    stevilo += round(float(posamezen_tek), 2)
+                for i in range(1, 13):
+                    if i == vrednosti.index(mesec):
+                        seznam_vsot_gibanj[i].append(round(stevilo, 2))
+            slovar_let[leto] = seznam_vsot_gibanj
+        for leto in seznam_izpisov.keys():
+            frekvenca = 0
+            seznam_frekvenc_gibanj = [[] for i in range(1, 13)]
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                for posamezen_tek in mesec:
+                    frekvenca += mesec.count(posamezen_tek)
+                for i in range(1, 13):
+                    if i == vrednosti.index(mesec):
+                        seznam_frekvenc_gibanj[i].append(round(frekvenca, 2))
+            slovar_frekvenc_po_letih[leto] = seznam_frekvenc_gibanj
+        for leto in slovar_let.keys():
+            vrednosti = slovar_let[leto]
+            frekvenca = slovar_frekvenc_po_letih[leto]
+            stevilo = 0
+            if vrednosti == []:
+                slovar_povprecij[leto] = []
             else:
-                for element in mesec:
-                    stevilo = mesec.count(element)
-                seznam_frekvenc_gibanj_nov.append([stevilo])
-        for i in range(len(seznam_vsot) - 1):
-            if seznam_frekvenc_gibanj_nov[i] == []:
-                seznam_povprečji_gibanj.append([])
-            else:
-                seznam_povprečji_gibanj.append([round(seznam_vsot[i].pop() / seznam_frekvenc_gibanj_nov[i].pop(), 2)])
-        return seznam_povprečji_gibanj
+                seznam_mesecov = [[] for i in range(1, 13)]
+                for i in range(len(vrednosti)):
+                    if vrednosti[i] == []:
+                        seznam_mesecov.append([])
+                    else:
+                        stevilo = round(vrednosti[i].pop() / frekvenca[i].pop(), 2)
+                        seznam_mesecov.append(stevilo)
+                slovar_povprecij[leto] = stevilo
+        return slovar_povprecij
 
-    def maksimum_vsakega_meseca_za_hojo(self):
+    def vsote_hoje_po_letih(self):
+        slovar_let = self.naredi_slovar_aktualnih_let()
         seznam_izpisov = self.izpisi_gibanja_hoje()
-        seznam_maksimov = []
-        stevilo = 0
-        for mesec in seznam_izpisov:
-            if mesec == []:
-                seznam_maksimov.append([])
-            else:
-                stevilo = max(mesec)
-                seznam_maksimov.append([stevilo])
-        return seznam_maksimov
+        slovar_vsote = self.naredi_slovar_aktualnih_let()
+        for leto in seznam_izpisov.keys():
+            stevilo = 0
+            seznam_vsot_gibanj = [[] for i in range(1, 13)]
+            vrednosti = seznam_izpisov[leto]
+            for mesec in vrednosti:
+                for posamezen_tek in mesec:
+                    stevilo += round(float(posamezen_tek), 2)
+                for i in range(1, 13):
+                    if i == vrednosti.index(mesec):
+                        seznam_vsot_gibanj[i].append(round(stevilo, 2))
+            slovar_let[leto] = seznam_vsot_gibanj
+        for leto in slovar_vsote.keys():
+            vrednosti = slovar_let[leto]
+            vsota = 0
+            for mesec in vrednosti:
+                if mesec == []:
+                    continue
+                else:
+                    vsota += float(mesec[0])
+            slovar_vsote[leto] = vsota
+        return slovar_vsote
+
+    def max_hoje_po_letih(self):
+        slovar_povprečij = self.vsote_hoje_po_letih()
+        maks = 0
+        prazen_seznam = []
+        for leto, vrednost in slovar_povprečij.items():
+            maks = max(maks, vrednost)
+            if slovar_povprečij[leto] == maks:
+                prazen_seznam.append((leto, maks))
+        return prazen_seznam
 
     """
     Te funkcije vrnejo vrednosti v primeru, ko oseba hodi.
     """
+    ##################################################################################################################################
+    """
+    Ta funkcija dodaja nova gibanja v naš seznam gibanj
+    """
 
-    # treba še popravit
-    def nov_vnos(self):
-        self.seznam_gibanj.append(self.DnevnikGibanja)
+    def dodaj(self):
+        self.dolzina = input('Koliko ste pretekli (v kilometrih)? ')
+        self.cas = input('Koliko časa ste tekli (v urah)? ')
+        self.nacin = input('Kako ste se gibali (za hojo napišite: False, za tek pa: True)? ')
+        self.strmina = input(
+            'Kakšen je bil klanec (napišite za ustrezno strmino (v odstotkih); zelo velik: 20, velik: 15, srednje velik: 10, majhen: 5, brez klanca: 0)? ')
+        self.teza = input('Kakšna je vaša telesna teža (v kilogramih)? ')
+        self.datum = date.today()
+        self.seznam_gibanj.append(
+            DnevnikGibanja(self.dolzina, self.cas, self.nacin, self.strmina, self.teza, self.datum))
         return self.seznam_gibanj
 
-        """
-        Ta funkcija dodaja nova gibanja v naš seznam gibanj
-        """
-
-    def izbris(self):
-        danasnji_datum = datetime.now()
-        for i in range(1, 13):
-            if int(danasnji_datum.strftime("%m")) == i:
-                self.slovar_gibanj['i'].pop()
-            else:
-                continue
-        return self.slovar_gibanj
+    def izbris_zadnjega_dodanega_elementa(self):
+        self.seznam_gibanj.pop()
+        return self.seznam_gibanj
 
     @staticmethod
     def iz_slovar(slovar):
@@ -395,10 +504,6 @@ class Uporabnik:
             "teza": self.teza
         }
 
-    """ 
-    marec = (gibanje for gibanje in self.seznam_gibanj if gibanje.dobi_mesec() == 3) 
-    """
-
 
 class DnevnikGibanja:
     def __init__(self, dolzina, cas, nacin, strmina, teza, datum):
@@ -407,25 +512,8 @@ class DnevnikGibanja:
         self.nacin = nacin
         self.strmina = strmina
         self.teza = teza
-        # TODO: ključe slovarja sem spremenil v seznam. Popravi, kjer je to potrebno.
-        # to ibriši
-        self.slovar_gibanj = {key: set() for key in range(1, 13)}
         self.datum = datum
 
-    @staticmethod
-    def vrni_dan(datum):
-        return datum.strftime("%d")
-
-    @staticmethod
-    def vrni_mesec(datum):
-        return datum.strftime("%m")
-
-    @staticmethod
-    def vrni_leto(datum):
-        return datum.strftime("%Y")
-
-    # def __init__(self, dolzina, cas, nacin, strmina, teza):
-    # TODO: implementiraj še pri ostalih razredih.
     @staticmethod
     def iz_slovar(slovar):
         return DnevnikGibanja(
@@ -448,24 +536,9 @@ class DnevnikGibanja:
         }
 
 
-"""
-    def razdelitev(self):
-        """
-# {1: []}
-
-# strftime
-# d = datetime.datetime.now()
-# m = d.strftime('%m')
-
-# funkcija, ki iz slovarja gibanj, dobi seznam vseh gibanj, nardis unijo vseh values iz kljucov
-
-slovar1 = {"dolzina": 42, "cas": 10, "nacin": True, "strmina": 10, "teza": 70, "datum": datetime.now()}
-danasnji_datum = date.today()
-danes1 = MerilnikTeka(4, 5, True, 5, 5)
-danasnji_datum = date.today()
-danes_poskus1 = DnevnikGibanja(4.5, 5, True, 5, 5, date.today())
-danes_poskus2 = DnevnikGibanja(5.2, 6, True, 3, 4, date.today())
-danes_poskus3 = DnevnikGibanja(6.4, 2, True, 2, 4, date.today())
+danes_poskus1 = DnevnikGibanja(4.5, 5, False, 5, 5, date.today())
+danes_poskus2 = DnevnikGibanja(5.2, 6, False, 3, 4, date.today())
+danes_poskus3 = DnevnikGibanja(6.4, 2, False, 2, 4, date.today())
 danes_poskus4 = DnevnikGibanja(8.2, 2, False, 2, 4, date.today())
 danes_poskus5 = DnevnikGibanja(1, 2, True, 2, 4, date.today())
 danes_poskus6 = DnevnikGibanja(9, 2, True, 2, 4, date.today())
@@ -474,11 +547,13 @@ prejsnji_mesec = DnevnikGibanja(12, 3, True, 4, 5, date.today() - timedelta(days
 vcerajsnji_datum = date.today() - timedelta(days=1)
 vcerajsnji_dan = DnevnikGibanja(12, 4, True, 43, 5, vcerajsnji_datum)
 prejsnji_mesec_datum = date.today() - timedelta(days=30)
+dve_leti_naprej = date.today() + timedelta(days=2 * 330)
+dve_leti_naprej_poskus = DnevnikGibanja(46, 3, True, 4, 70, dve_leti_naprej)
 tri_leta_naprej = date.today() + timedelta(days=3 * 330)
 tri_leta_naprej_poskus = DnevnikGibanja(23, 4, True, 5, 66, tri_leta_naprej)
 
 u = Uporabnik([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
-               prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan])
+               prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan, dve_leti_naprej_poskus])
 
 # kako iz stringa dobis datum
 # from datetime import datetime
