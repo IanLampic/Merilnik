@@ -108,29 +108,37 @@ class Uporabnik:
                         slovar_let[leto]['hoja'][int(gibanje.datum.strftime("%m")) - 1].append(gibanje)
         return slovar_let
 
-    # TODO: Treba je uporabit to lambdo, da se datume uredi po dnevih
-    def uredi_funkcijo_po_mesecih(self):
+    def urejena_funkcija_po_mesecih(self):
         slovar = self.razdeli_po_mesecih()
         for leto in slovar.keys():
             posamezno_leto = slovar[leto]
             for nacin in posamezno_leto.keys():
-                nov = sorted(posamezno_leto[nacin], key=lambda x: int(x[-1]))
-                posamezno_leto[nacin] = nov
-            slovar[leto] = posamezno_leto
+                meseci = posamezno_leto[nacin]
+                for i in range(12):
+                    gibanja = meseci[i]
+                    for gibanje in gibanja:
+                        nov = sorted(gibanja, key = lambda gibanje: gibanje.datum)
+                        meseci[i] = nov 
+                    posamezno_leto[nacin] = meseci
+                slovar[leto] = posamezno_leto
         return slovar
 
     ############################################################################################################################################################
     def izpis_gibanja(self):
-        slovar_let = self.naredi_slovar_aktualnih_let()
-        for gibanje in self.seznam_gibanj:
-            leto_gibanja = int(gibanje.datum.strftime("%Y"))
-            for leto in slovar_let.keys():
-                if leto_gibanja == leto:
-                    if gibanje.nacin:
-                        slovar_let[leto]['tek'][int(gibanje.datum.strftime("%m")) - 1].append(gibanje.dolzina)
-                    else:
-                        slovar_let[leto]['hoja'][int(gibanje.datum.strftime("%m")) - 1].append(gibanje.dolzina)
-        return slovar_let
+        slovar = self.urejena_funkcija_po_mesecih()
+        for leto in slovar.keys():
+            posamezno_leto = slovar[leto]
+            for nacin in posamezno_leto.keys():
+                meseci = posamezno_leto[nacin]
+                for i in range(12):
+                    gibanja = meseci[i]
+                    prazen = []
+                    for gibanje in gibanja:
+                        prazen.append(gibanje.dolzina)
+                        meseci[i] = prazen
+                    posamezno_leto[nacin] = meseci
+                slovar[leto] = posamezno_leto
+        return slovar
 
     def vsota_gibanja(self):
         slovar_dolzin = self.izpis_gibanja()
@@ -138,7 +146,7 @@ class Uporabnik:
             slovar_posameznega = slovar_dolzin[leto]
             for nacin in slovar_posameznega:
                 meseci = slovar_posameznega[nacin]
-                for i in range(0, 12):
+                for i in range(12):
                     gibanja = meseci[i]
                     vsota = 0
                     for gibanje in gibanja:
@@ -157,7 +165,7 @@ class Uporabnik:
             slovar_posameznega = slovar_dolzin[leto]
             for nacin in slovar_posameznega:
                 meseci = slovar_posameznega[nacin]
-                for i in range(0, 12):
+                for i in range(12):
                     gibanja = meseci[i]
                     vsota = 0
                     frekvenca = 0
@@ -181,7 +189,7 @@ class Uporabnik:
             slovar_posameznega = slovar_dolzin[leto]
             for nacin in slovar_posameznega:
                 meseci = slovar_posameznega[nacin]
-                for i in range(0, 12):
+                for i in range(12):
                     gibanja = meseci[i]
                     maks = 0
                     if gibanja == []:
@@ -195,7 +203,7 @@ class Uporabnik:
         return slovar_dolzin
 
     """
-    Naslednje tri funkcije, vrnejo analizo podatkov za leta za tek.
+    Naslednje tri funkcije, vrnejo analizo podatkov za leta
     """
 
     def vsota_gibanja_po_letih(self):
@@ -223,7 +231,7 @@ class Uporabnik:
                 meseci = slovar_posameznega[nacin]
                 vsota = 0.0
                 frekvenca = 0
-                if meseci == [[] for i in range(1, 13)]:
+                if meseci == [[] for i in range(12)]:
                     frekvenca = 1
                 else:
                     for gibanja in meseci:
@@ -237,7 +245,7 @@ class Uporabnik:
             slovar_dolzin[leto] = slovar_posameznega
         return slovar_dolzin
 
-    def max_teka_po_letih(self):
+    def max_gibanja_po_letih(self):
         slovar_vsot = self.vsota_gibanja_po_letih()
         tek = []
         hoja = []
@@ -365,7 +373,7 @@ class DnevnikGibanja:
 # return stanje
 
 danesss = MerilnikTeka(5.6, 6, True, 5, 60)
-danes_poskus1 = DnevnikGibanja(4.5, 5, False, 5, 5, date.today())
+danes_poskus1 = DnevnikGibanja(4.5, 5, True, 5, 5, date.today())
 danes_poskus2 = DnevnikGibanja(5.2, 6, False, 3, 4, date.today())
 danes_poskus3 = DnevnikGibanja(6.4, 2, False, 2, 4, date.today())
 danes_poskus4 = DnevnikGibanja(8.2, 2, False, 2, 4, date.today())
@@ -383,7 +391,7 @@ tri_leta_naprej_poskus = DnevnikGibanja(23, 4, True, 5, 66, tri_leta_naprej)
 
 u = Uporabnik([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
                prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan, dve_leti_naprej_poskus])
-
+w = Uporabnik([danes_poskus1, vcerajsnji_dan, prejsnji_mesec])
 # kako iz stringa dobis datum
 # from datetime import datetime
 #
