@@ -1,2 +1,2 @@
 # Pozdravljeni!
-Ta program izračuna *porabo kalorij* in *porabo kisika* za določeno gibanje (tek ali hojo). Prav tako pa shranjuje vnesene podatke, jih analizira in vrne različne vrednosti kot so povprečje gibanja za mesec, leta ter mesec, v katerem si največ pretekel, itd..
+Ta program izračuna *porabo kalorij* in *porabo kisika* za določeno gibanje (tek ali hojo). Prav tako pa shranjuje vnesene podatke, jih analizira in vrne različne vrednosti kot so povprečje gibanja za mesec in leto ter mesec, v katerem si največ pretekel ...
