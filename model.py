@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 import json
+import datetime
 
 
 class MerilnikTeka:
@@ -336,7 +337,8 @@ class DnevnikGibanja:
             nacin=bool(slovar["nacin"]),
             strmina=int(slovar["strmina"]),
             teza=int(slovar["teza"]),
-            datum=slovar["datum"]
+            # datum=slovar["datum"]
+            datum=datetime.datetime.strptime(slovar["datum"], "%Y-%m-%d").date()
         )
 
     def v_slovar(self):
@@ -346,22 +348,39 @@ class DnevnikGibanja:
             "nacin": self.nacin,
             "strmina": self.strmina,
             "teza": self.teza,
-            "datum": self.datum
+            "datum": str(self.datum)
         }
 
     # Naredi za shranjevanje gibanja v eno datoteko.
     def shrani_v_datoteko(self, ime_datoteke):
         with open(ime_datoteke, "w") as dat:
-            slovar = self.v_slovar()
-            json.dump(slovar, dat)
+            # json.dump({"dolzina": self.dolzina}, dat, ensure_ascii=False, indent=4)
+            json.dump(self.v_slovar(), dat, ensure_ascii=False, indent=4)
+
 
     @staticmethod
     def preberi_iz_datoteke(ime_datoteke):
         with open(ime_datoteke) as dat:
             slovar = json.load(dat)
-            return MerilnikTeka.iz_slovarja()
+            return DnevnikGibanja.iz_slovar(slovar)
 
+    @staticmethod
+    def iz_slovarja_v_seznam(slo):
+        prazen = []
+        for element in slo.values():
+            prazen.append(element)
+        return prazen
 
+    @staticmethod
+    def iz_seznama_v_slovar(sez):
+        slo = {}
+        slo['dolzina'] = sez[0]
+        slo['cas'] = sez[1]
+        slo['nacin'] = sez[2]
+        slo['strmina'] = sez[3]
+        slo['teza'] = sez[4]
+        slo['datum'] = sez[5]
+        return slo
 #    @staticmethod
 #   def iz_slovarja(slovar):
 #      gibanja = Uporabnik()
@@ -371,6 +390,7 @@ class DnevnikGibanja:
 #  if slovar["aktualni_spisek"] is not None:
 #     stanje.aktualni_spisek = stanje.spiski[slovar["aktualni_spisek"]]
 # return stanje
+
 
 danesss = MerilnikTeka(5.6, 6, True, 5, 60)
 danes_poskus1 = DnevnikGibanja(4.5, 5, True, 5, 5, date.today())
@@ -392,22 +412,3 @@ tri_leta_naprej_poskus = DnevnikGibanja(23, 4, True, 5, 66, tri_leta_naprej)
 u = Uporabnik([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
                prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan, dve_leti_naprej_poskus])
 w = Uporabnik([danes_poskus1, vcerajsnji_dan, prejsnji_mesec])
-# kako iz stringa dobis datum
-# from datetime import datetime
-#
-# timestamp = 1528797322
-# date_time = datetime.fromtimestamp(timestamp)
-#
-# print("Date time object:", date_time)
-#
-# d = date_time.strftime("%m/%d/%Y, %H:%M:%S")
-# print("Output 2:", d)
-#
-# d = date_time.strftime("%d %b, %Y")
-# print("Output 3:", d)
-#
-# d = date_time.strftime("%d %B, %Y")
-# print("Output 4:", d)
-#
-# d = date_time.strftime("%I%p")
-# print("Output 5:", d)
