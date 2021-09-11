@@ -1,9 +1,10 @@
-from datetime import date, datetime, timedelta
+from datetime import *
 import json
 import datetime
 
 
 class MerilnikTeka:
+    OSNOVNA_PORABA_KISIKA = 3.5
 
     def __init__(self, dolzina, cas, nacin, strmina, teza):
         self.dolzina = dolzina
@@ -12,8 +13,6 @@ class MerilnikTeka:
         """ Pri načinu tek predstavlja resnico, hoja pa laž """
         self.strmina = strmina
         self.teza = teza
-        # KONSTANTE SE PIŠEJO Z VELIKO
-        self.osnovna_poraba_kisika = 3.5
 
     """za strmino nastavijo pri tekstovnemu vmesniku:"""
     """-brez = 0 %"""
@@ -42,9 +41,9 @@ class MerilnikTeka:
 
     def poraba_kisika(self):
         if self.nacin:
-            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + self.osnovna_poraba_kisika
+            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + OSNOVNA_PORABA_KISIKA
         else:
-            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + self.osnovna_poraba_kisika
+            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + OSNOVNA_PORABA_KISIKA
 
     def poraba_kisika_s_tezo(self):
         return str(round(self.poraba_kisika() * self.teza * self.cas, 2)) + ' ml/(kg min)'
@@ -54,27 +53,25 @@ class MerilnikTeka:
 
 
 class Uporabnik:
-
     def __init__(self, seznam_gibanj):
-        self.seznam_gibanj = seznam_gibanj
+        self.seznam_gibanj = sorted(seznam_gibanj, key=lambda x: x.datum)
         """
         Seznam gibanj kot elemente vsebuje posamezna gibanja, 1 uporabnik ima več gibanj.
         """
 
-    # TODO: lambda for sorting
     @staticmethod
     def vrni_dan():
-        danasnji_datum = datetime.now()
+        danasnji_datum = datetime.date.today()
         return danasnji_datum.strftime("%d")
 
     @staticmethod
     def vrni_mesec():
-        danasnji_datum = datetime.now()
+        danasnji_datum = datetime.date.today()
         return int(danasnji_datum.strftime("%m"))
 
     @staticmethod
     def vrni_leto():
-        danasnji_datum = datetime.now()
+        danasnji_datum = datetime.date.today()
         return int(danasnji_datum.strftime("%Y"))
 
     def naredi_slovar_aktualnih_let(self):
@@ -109,24 +106,8 @@ class Uporabnik:
                         slovar_let[leto]['hoja'][int(gibanje.datum.strftime("%m")) - 1].append(gibanje)
         return slovar_let
 
-    def urejena_funkcija_po_mesecih(self):
-        slovar = self.razdeli_po_mesecih()
-        for leto in slovar.keys():
-            posamezno_leto = slovar[leto]
-            for nacin in posamezno_leto.keys():
-                meseci = posamezno_leto[nacin]
-                for i in range(12):
-                    gibanja = meseci[i]
-                    for gibanje in gibanja:
-                        nov = sorted(gibanja, key = lambda gibanje: gibanje.datum)
-                        meseci[i] = nov 
-                    posamezno_leto[nacin] = meseci
-                slovar[leto] = posamezno_leto
-        return slovar
-
-    ############################################################################################################################################################
     def izpis_gibanja(self):
-        slovar = self.urejena_funkcija_po_mesecih()
+        slovar = self.razdeli_po_mesecih()
         for leto in slovar.keys():
             posamezno_leto = slovar[leto]
             for nacin in posamezno_leto.keys():
@@ -266,29 +247,19 @@ class Uporabnik:
         prazen_seznam3.append(prazen_seznam2.pop())
         return prazen_seznam3
 
-    ##################################################################################################################################
     """
     Ta funkcija dodaja nova gibanja v naš seznam gibanj
     """
 
-    def dodaj(self):
-        self.dolzina = input('Koliko ste pretekli (v kilometrih)? ')
-        self.cas = input('Koliko časa ste tekli (v urah)? ')
-        self.nacin = input('Kako ste se gibali (za hojo napišite: False, za tek pa: True)? ')
-        self.strmina = input(
-            'Kakšen je bil klanec (za ustrezno strmino napišite (v odstotkih); zelo velik: 20, velik: 15, srednje velik: 10, majhen: 5, brez klanca: 0)? ')
-        self.teza = input('Kakšna je vaša telesna teža (v kilogramih)? ')
-        self.datum = date.today()
-        self.seznam_gibanj.append(
-            DnevnikGibanja(self.dolzina, self.cas, self.nacin, self.strmina, self.teza, self.datum))
-        return self.seznam_gibanj
+    def dodaj(self, gibanje):
+        self.seznam_gibanj.append(gibanje)
 
     def izbris_zadnjega_dodanega_elementa(self):
         self.seznam_gibanj.pop()
         return self.seznam_gibanj
 
     @staticmethod
-    def iz_slovar(slovar):
+    def iz_slovarja(slovar):
         return DnevnikGibanja(
             dolzina=int(slovar["dolzina"]),
             cas=int(slovar["cas"]),
@@ -317,7 +288,7 @@ class Uporabnik:
     def preberi_iz_datoteke(ime_datoteke):
         with open(ime_datoteke) as dat:
             slovar = json.load(dat)
-            return MerilnikTeka.iz_slovarja()
+            return Uporabnik.iz_slovarja(slovar)
 
 
 class DnevnikGibanja:
@@ -330,7 +301,7 @@ class DnevnikGibanja:
         self.datum = datum
 
     @staticmethod
-    def iz_slovar(slovar):
+    def iz_slovarja(slovar):
         return DnevnikGibanja(
             dolzina=int(slovar["dolzina"]),
             cas=int(slovar["cas"]),
@@ -357,12 +328,11 @@ class DnevnikGibanja:
             # json.dump({"dolzina": self.dolzina}, dat, ensure_ascii=False, indent=4)
             json.dump(self.v_slovar(), dat, ensure_ascii=False, indent=4)
 
-
     @staticmethod
     def preberi_iz_datoteke(ime_datoteke):
         with open(ime_datoteke) as dat:
             slovar = json.load(dat)
-            return DnevnikGibanja.iz_slovar(slovar)
+            return DnevnikGibanja.iz_slovarja(slovar)
 
     @staticmethod
     def iz_slovarja_v_seznam(slo):
@@ -381,6 +351,8 @@ class DnevnikGibanja:
         slo['teza'] = sez[4]
         slo['datum'] = sez[5]
         return slo
+
+
 #    @staticmethod
 #   def iz_slovarja(slovar):
 #      gibanja = Uporabnik()

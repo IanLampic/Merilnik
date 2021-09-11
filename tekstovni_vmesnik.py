@@ -1,32 +1,9 @@
-from model import MerilnikTeka, Uporabnik, DnevnikGibanja
+from model import *
 from datetime import date, timedelta
 import json
-
-
-# danesss = MerilnikTeka(5.6, 6, True, 5, 60)
-# danes_poskus1 = DnevnikGibanja(4.5, 5, True, 5, 5, date.today())
-# danes_poskus2 = DnevnikGibanja(5.2, 6, False, 3, 4, date.today())
-# danes_poskus3 = DnevnikGibanja(6.4, 2, False, 2, 4, date.today())
-# danes_poskus4 = DnevnikGibanja(8.2, 2, False, 2, 4, date.today())
-##danes_poskus5 = DnevnikGibanja(1, 2, True, 2, 4, date.today())
-# danes_poskus6 = DnevnikGibanja(9, 2, True, 2, 4, date.today())
-# danes_poskus7 = DnevnikGibanja(10.23, 2, False, 2, 4, date.today())
-# prejsnji_mesec = DnevnikGibanja(12, 3, True, 4, 5, date.today() - timedelta(days=30))
-# vcerajsnji_datum = date.today() - timedelta(days=1)
-# vcerajsnji_dan = DnevnikGibanja(12, 4, True, 43, 5, vcerajsnji_datum)
-# prejsnji_mesec_datum = date.today() - timedelta(days=30)
-##dve_leti_naprej = date.today() + timedelta(days=2 * 330)
-# dve_leti_naprej_poskus = DnevnikGibanja(46, 3, True, 4, 70, dve_leti_naprej)
-# tri_leta_naprej = date.today() + timedelta(days=3 * 330)
-# tri_leta_naprej_poskus = DnevnikGibanja(23, 4, True, 5, 66, tri_leta_naprej)
-
-# u = Uporabnik([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
-#              prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan, dve_leti_naprej_poskus])
-# w = Uporabnik([danes_poskus1, vcerajsnji_dan, prejsnji_mesec])
 ##################################################################################################################################
 def krepko(niz):
     return f'\033[1m{niz}\033[0m'
-
 
 DATOTEKA_S_STANJEM = "stanje.json"
 try:
@@ -34,6 +11,16 @@ try:
 except FileNotFoundError:
     gibanja = Uporabnik([])
 
+DODAJ_GIBANJE = 1
+IZBRIS_ZADNJEGA_GIBANJA = 2
+IZPIS = 3
+VSOTA = 4
+POVPRECJE = 5
+MAX_ZA_VSAK_MESEC = 6
+VSOTA_PO_LETIH = 7
+POVPRECJE_PO_LETIH = 8
+MAX_PO_LETIH = 9
+IZHOD = 10
 
 def preberi_stevilo(stevilo):
     while True:
@@ -44,99 +31,81 @@ def preberi_stevilo(stevilo):
         except ValueError:
             print("Vnesti morate število.")
 
-
-def izberi(seznam):
+def izberi(moznosti):
     """Uporabniku našteje možnosti ter vrne izbrano."""
-    if len(seznam) == 1:
-        opis, element = seznam[0]
-        print(f"Na voljo je samo možnost {opis}, zato sem jo izbral.")
-        return element
-    for indeks, (oznaka, _) in enumerate(seznam, 1):
-        print(f"{indeks}) {oznaka}")
+    for indeks, (_moznost, opis) in enumerate(moznosti, 1):
+        print(f"{indeks}) {opis}")
     while True:
         izbira = preberi_stevilo("> ")
-        if 1 <= izbira <= len(seznam):
-            _, element = seznam[izbira - 1]
-            return element
+        if 1 <= izbira <= len(moznosti):
+            moznost, _opis = moznosti[izbira - 1]
+            return moznost
         else:
-            print(f"Izberi število med 1 in {len(seznam)}")
-
+            print(f"Izberi število med 1 in {len(moznosti)}")
 
 ######################## TEKSTOVNI VMESNIK #######################
 def tekstovni_vmesnik():
     prikazi_pozdravno_sporocilo()
     while True:
-        try:
-            print(80 * "#")
-            print()
-            print(krepko('Kaj bi radi naredil?'))
-            moznosti = [
-                ('vnesel novo gibanje', dodaj),
-                ('izbrisal zadnje dodano gibanje', izbris_zadnjega_dodanega_elementa),
-                ('zanima me maksimum gibanja po letih', dodaj_to_funkcijo),
-                ('zanima me maksimum gibanja po mesecih', dodaj_to_funkcijo),
-                ('zanima me povprečje po letih', dodaj_to_funkcijo),
-                ('zanima me povprečje po mesecih', dodaj_to_funkcijo)
+        print(80 * "-")
+        print(krepko('Kaj bi radi naredil?'))
+        ukaz = izberi(
+            [
+                (DODAJ_GIBANJE, 'dodal novo gibanje'),
+                (IZBRIS_ZADNJEGA_GIBANJA, 'izbrisal zadnje dodano gibanje'),
+                (IZPIS, 'vrni slovar vseh gibanj'),
+                (VSOTA, 'vrni slovar vsot vseh gibanj po mesecih'),
+                (POVPRECJE, 'vrni slovar povprečij vseh gibanj po mesecih'),
+                (MAX_ZA_VSAK_MESEC, 'vrni slovar maksimalnih vsot gibanj po mesecih'),
+                (VSOTA_PO_LETIH, 'vrni slovar vsot gibanj po letih'),
+                (POVPRECJE_PO_LETIH, 'vrni slovar povprečij gibanj po letih'),
+                (MAX_PO_LETIH, 'vrni leto in maksimalno gibanje v danem letu'),
+                (IZHOD, 'zapri program')
             ]
-            izbira = izberi(moznosti)
-            print(80 * "-")
-            izbira()
-            print()
-            input("Pritisnite Enter za shranjevanje in vrnitev v osnovni meni...")
+        )
+        if ukaz == DODAJ_GIBANJE:
+            dodaj()
+        elif ukaz == IZBRIS_ZADNJEGA_GIBANJA:
+            izbris_zadnjega_dodanega_elementa()
+        elif ukaz == IZPIS:
+            izpis_gibanja()
+        elif ukaz == VSOTA:
+            vsota_gibanja()
+        elif ukaz == POVPRECJE:
+            povprečje_gibanja()
+        elif ukaz == MAX_ZA_VSAK_MESEC:
+            max_gibanja_za_vsak_mesec()
+        elif ukaz == VSOTA_PO_LETIH:
+            vsota_gibanja_po_letih()
+        elif ukaz == POVPRECJE_PO_LETIH:
+            povprečje_gibanja_po_letih()
+        elif ukaz == MAX_PO_LETIH:
+            max_gibanja_po_letih()
+        elif ukaz == IZHOD:
             gibanja.shrani_v_datoteko(DATOTEKA_S_STANJEM)
-        except ValueError as e:
-            print(e.args[0])
-        except KeyboardInterrupt:
-            print()
             print("Nasvidenje!")
-            return
-
-        # prikazi_dosedanja_gibanja()
-
-
+            print(80 * "-")
+            break
+            
 def prikazi_pozdravno_sporocilo():
     print(krepko("Dobrodošli!"))
     print("Za izhod pritisnite Ctrl-C.")
 
-
-def izpis_gibanja(self):
-    slovar = self.urejena_funkcija_po_mesecih()
-    for leto in slovar.keys():
-        posamezno_leto = slovar[leto]
-        for nacin in posamezno_leto.keys():
-            meseci = posamezno_leto[nacin]
-            for i in range(12):
-                gibanja = meseci[i]
-                prazen = []
-                for gibanje in gibanja:
-                    prazen.append(gibanje.dolzina)
-                    meseci[i] = prazen
-                posamezno_leto[nacin] = meseci
-            slovar[leto] = posamezno_leto
-    return slovar
-
-
 # TODO: Dodaj funkcijo, ki ti vrne kalorije in kisik, zrihtaj da bo, ko vpises stevilko funkcijo delovala,
 # dodaj se funkcije, ki ti vrnejo povprečje, maksimum (funkcije definirane v model) in kje bi se sklical nanje
 def dodaj():
-    dolzina = preberi_stevilo('Koliko ste pretekli (v kilometrih)?> ')
-    cas = preberi_stevilo('Koliko časa ste tekli (v urah)?> ')
-    nacin = preberi_stevilo('Kako ste se gibali (za hojo napišite: False, za tek pa: True)?> ')
-    strmina = preberi_stevilo(
-        'Kakšen je bil klanec (napišite za ustrezno strmino (v odstotkih); zelo velik: 20, velik: 15, srednje velik: 10, majhen: 5, brez klanca: 0)?> ')
-    teza = preberi_stevilo('Kakšna je vaša telesna teža (v kilogramih)?> ')
+    print('Vnesite podatke novega gibanja')
+    dolzina = input('Koliko ste pretekli (v kilometrih)?> ')
+    cas = input('Koliko časa ste tekli (v urah)?> ')
+    nacin = input('Kako ste se gibali (za hojo napišite: False, za tek pa: True)?> ')
+    strmina = input('Kakšen je bil klanec (napišite za ustrezno strmino (v odstotkih); zelo velik: 20, velik: 15, srednje velik: 10, majhen: 5, brez klanca: 0)?> ')
+    teza = input('Kakšna je vaša telesna teža (v kilogramih)?> ')
     datum = date.today()
     novo_gibanje = DnevnikGibanja(dolzina, cas, nacin, strmina, teza, datum)
+    gibanja_za_kalorije = MerilnikTeka(dolzina, cas, nacin, strmina, teza)
     gibanja.dodaj(novo_gibanje)
-
-
-def prikazi_dosedanja_gibanja():
-    if gibanja.seznam_gibanj:
-        print(f"- {gibanja.izpisi_gibanja_teka(), gibanja.izpisi_gibanja_hoje()}")
-    else:
-        print("Niste vpisali še nobenega gibanja")
-        dodaj()
-
+    gibanja_za_kalorije.poraba_kalorij()
+    gibanja_za_kalorije.poraba_kisika_s_tezo()
 
 def izbris_zadnjega_dodanega_elementa():
     if gibanja.seznam_gibanj == []:
@@ -145,19 +114,35 @@ def izbris_zadnjega_dodanega_elementa():
         gibanje = gibanja.seznam_gibanj.pop()
         gibanje
 
+def izpis_gibanja():
+    gibanja.izpis_gibanja()
 
-def dodaj_to_funkcijo():
-    None
+def vsota_gibanja():
+    gibanja.vsota_gibanja()
 
+def povprečje_gibanja():
+    gibanja.povprečje_gibanja()
 
-# sez  = [(dodaj()), (izbris_zadnjega_dodanega_elementa())]
+def max_gibanja_za_vsak_mesec():
+    gibanja.max_gibanja_za_vsak_mesec()
 
+def povprečje_gibanja_po_letih():
+    gibanja.povprečje_gibanja_po_letih()
+
+def max_gibanja_po_letih():
+    gibanja.max_gibanja_po_letih()
+
+def vsota_gibanja_po_letih():
+    gibanja.vsota_gibanja_po_letih()
+
+def prikazi_dosedanja_gibanja():
+    if gibanja.seznam_gibanj:
+        print(f"- {gibanja.izpisi_gibanja_teka(), gibanja.izpisi_gibanja_hoje()}")
+    else:
+        print("Niste vpisali še nobenega gibanja")
+        dodaj()
 
 tekstovni_vmesnik()
 
-# shranjevanje dodatek(da ne rabiš vsakič vsa gibanja napisat)
-# treba uporabit zapis json, za naredit json-
-# json.loads(element), prej napises import json, iz jsona pretvor v python
-# json.dumps(None)-iz pythona v json
 
 
