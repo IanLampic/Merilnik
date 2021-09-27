@@ -26,24 +26,27 @@ def preberi_stevilo(stevilo):
     while True:
         vnos = input('> ')
         try:
-            vnos = input(stevilo)
             return int(vnos)
         except ValueError:
             print("Vnesti morate število.")
 
 def izberi(moznosti):
     """Uporabniku našteje možnosti ter vrne izbrano."""
-    for indeks, (_moznost, opis) in enumerate(moznosti, 1):
+    for indeks, (moznost, opis) in enumerate(moznosti, 1):
         print(f"{indeks}) {opis}")
     while True:
         izbira = preberi_stevilo("> ")
         if 1 <= izbira <= len(moznosti):
-            moznost, _opis = moznosti[izbira - 1]
+            moznost, opis = moznosti[izbira - 1]
             return moznost
         else:
             print(f"Izberi število med 1 in {len(moznosti)}")
 
-######################## TEKSTOVNI VMESNIK #######################
+######################## TEKSTOVNI VMESNIK ##########################
+"""
+Seznam gibanj, ki imajo datum nazaj v formatu datetime in ne v jsonu.
+"""
+
 def tekstovni_vmesnik():
     prikazi_pozdravno_sporocilo()
     while True:
@@ -51,7 +54,7 @@ def tekstovni_vmesnik():
         print(krepko('Kaj bi radi naredil?'))
         ukaz = izberi(
             [
-                (DODAJ_GIBANJE, 'dodal novo gibanje'),
+                (DODAJ_GIBANJE, 'vpisal novo gibanje'),
                 (IZBRIS_ZADNJEGA_GIBANJA, 'izbrisal zadnje dodano gibanje'),
                 (IZPIS, 'vrni slovar vseh gibanj'),
                 (VSOTA, 'vrni slovar vsot vseh gibanj po mesecih'),
@@ -59,14 +62,14 @@ def tekstovni_vmesnik():
                 (MAX_ZA_VSAK_MESEC, 'vrni slovar maksimalnih vsot gibanj po mesecih'),
                 (VSOTA_PO_LETIH, 'vrni slovar vsot gibanj po letih'),
                 (POVPRECJE_PO_LETIH, 'vrni slovar povprečij gibanj po letih'),
-                (MAX_PO_LETIH, 'vrni leto in maksimalno gibanje v danem letu'),
+                (MAX_PO_LETIH, 'vrni leto, ko si se največ gibal(tek ali hoja) in maksimalno gibanje v danem letu'),
                 (IZHOD, 'zapri program')
             ]
         )
         if ukaz == DODAJ_GIBANJE:
             dodaj()
         elif ukaz == IZBRIS_ZADNJEGA_GIBANJA:
-            izbris_zadnjega_dodanega_elementa()
+            izbris_zadnjega_elementa()
         elif ukaz == IZPIS:
             izpis_gibanja()
         elif ukaz == VSOTA:
@@ -86,61 +89,65 @@ def tekstovni_vmesnik():
             print("Nasvidenje!")
             print(80 * "-")
             break
-            
+
 def prikazi_pozdravno_sporocilo():
     print(krepko("Dobrodošli!"))
     print("Za izhod pritisnite Ctrl-C.")
 
-# TODO: Dodaj funkcijo, ki ti vrne kalorije in kisik, zrihtaj da bo, ko vpises stevilko funkcijo delovala,
-# dodaj se funkcije, ki ti vrnejo povprečje, maksimum (funkcije definirane v model) in kje bi se sklical nanje
 def dodaj():
-    print('Vnesite podatke novega gibanja')
-    dolzina = input('Koliko ste pretekli (v kilometrih)?> ')
-    cas = input('Koliko časa ste tekli (v urah)?> ')
-    nacin = input('Kako ste se gibali (za hojo napišite: False, za tek pa: True)?> ')
-    strmina = input('Kakšen je bil klanec (napišite za ustrezno strmino (v odstotkih); zelo velik: 20, velik: 15, srednje velik: 10, majhen: 5, brez klanca: 0)?> ')
-    teza = input('Kakšna je vaša telesna teža (v kilogramih)?> ')
+    print('Vnesite podatke novega gibanja (pišite cela števila).')
+    dolzina = int(input('Koliko ste pretekli (v kilometrih)?> '))
+    cas = int(input('Koliko časa ste tekli (v urah)?> '))
+    nacin = (input('Kako ste se gibali (za hojo napišite: False, za tek pa: True)?> '))
+    while nacin != True and nacin != False:
+        if nacin == 'True':
+            nacin = True
+        elif nacin == 'False':
+            nacin = False
+        else:
+            print('Niste pravilno definiralni načina.')
+            nacin = (input('Kako ste se gibali (za hojo napišite: False, za tek pa: True)?> '))
+    strmina = int(input('Kakšen je bil klanec (napišite za ustrezno strmino (v odstotkih); zelo velik: 20, velik: 15, srednje velik: 10, majhen: 5, brez klanca: 0)?> '))
+    teza = int(input('Kakšna je vaša telesna teža (v kilogramih)?> '))
     datum = date.today()
     novo_gibanje = DnevnikGibanja(dolzina, cas, nacin, strmina, teza, datum)
-    gibanja_za_kalorije = MerilnikTeka(dolzina, cas, nacin, strmina, teza)
+    gibanja_za_kalorije = MerilnikGibanja(dolzina, cas, nacin, strmina, teza)
     gibanja.dodaj(novo_gibanje)
-    gibanja_za_kalorije.poraba_kalorij()
-    gibanja_za_kalorije.poraba_kisika_s_tezo()
+    print(f'Porabili ste {gibanja_za_kalorije.poraba_kalorij()} in {gibanja_za_kalorije.poraba_kisika_s_tezo()}(kisika).')
 
-def izbris_zadnjega_dodanega_elementa():
+def izbris_zadnjega_elementa():
     if gibanja.seznam_gibanj == []:
         return print('Niste dodali še nobenega gibanja')
     else:
-        gibanje = gibanja.seznam_gibanj.pop()
-        gibanje
+        gibanja.izbris_zadnjega_elementa()
 
 def izpis_gibanja():
-    gibanja.izpis_gibanja()
+    gib = gibanja.koncna_za_datume()
+    print(gib.izpis_gibanja())
 
 def vsota_gibanja():
-    gibanja.vsota_gibanja()
+    gib = gibanja.koncna_za_datume()
+    print(gib.vsota_gibanja())
 
 def povprečje_gibanja():
-    gibanja.povprečje_gibanja()
+    gib = gibanja.koncna_za_datume()
+    print(gib.novo_povp_mesec())
 
 def max_gibanja_za_vsak_mesec():
-    gibanja.max_gibanja_za_vsak_mesec()
-
-def povprečje_gibanja_po_letih():
-    gibanja.povprečje_gibanja_po_letih()
-
-def max_gibanja_po_letih():
-    gibanja.max_gibanja_po_letih()
+    gib = gibanja.koncna_za_datume()
+    print(gib.max_gibanja_za_vsak_mesec())
 
 def vsota_gibanja_po_letih():
-    gibanja.vsota_gibanja_po_letih()
+    gib = gibanja.koncna_za_datume()
+    print(gib.vsota_gibanja_po_letih())
 
-def prikazi_dosedanja_gibanja():
-    if gibanja.seznam_gibanj:
-        print(f"- {gibanja.izpisi_gibanja_teka(), gibanja.izpisi_gibanja_hoje()}")
-    else:
-        print("Niste vpisali še nobenega gibanja")
-        dodaj()
+def povprečje_gibanja_po_letih():
+    gib = gibanja.koncna_za_datume()
+    print(gib.novo_povp())
+
+def max_gibanja_po_letih():
+    gib = gibanja.koncna_za_datume()
+    print(gib.max_gibanja_po_letih())
 
 tekstovni_vmesnik()
 
