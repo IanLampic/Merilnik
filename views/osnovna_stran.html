@@ -1,0 +1,50 @@
+% rebase('osnovava.html')
+<body>
+ <ul class="nav navbar-nav">
+    <li>
+        <div class="level-item">
+        <a class="button is-info" href="/dodaj-gibanje/">Dodaj gibanje</a>
+        </div>
+    </li>
+    <li>
+        <div class="level-item">
+            <a class="button is-info" href="/izbris-zadnjega-gibanja/">Izbrisati zadnje dodano gibanje</a>
+        </div>
+    </li>
+</ul>
+
+
+<hr>
+<strong>Analiza gibanj</strong>
+<h1>Tukaj je analiza vašega dosedanjega gibanja. Oglati oklepaji '[]' znotraj načina (tek ali hoja) predstavljajo en mesec.</h1>
+<h2><u>Vsota mesecov:</u></h2>
+<h3>Predstavlja skupno količino gibanja v danem mesecu.</h3>
+<h3> {{ vsota_mesec }}</h3>
+<br>
+<h2><u>Povprečje mesecov:</u></h2>
+<h3>Predstavlja koliko ste se povprečno gibali vsak dan v danem mesecu.</h3>
+<h3> {{ povp_mesec }}</h3>
+<br>
+<h2><u>Maksimum mesecov:</u></h2>
+<h3>Predstavlja maksimalno gibanja, ki ste ga opravili v danem mesecu.</h3>
+<h3> {{ max_mesec }}</h3>
+<br>
+<h2><u>Vsota po letih:</u></h2>
+<h3>Predstavlja skupno količino gibajna v danem letu.</h3>
+<h3> {{ vsota_leta }}</h3>
+<br>
+<h2><u>Povprečje let:</u></h2>
+<h3>Predstavlja koliko ste se povprečno gibali vsak dan v danem letu.</h3>
+<h3> {{ povp_leto }}</h3>
+<br>
+<h2><u>Maksimum let:</u></h2>
+<h3>Predstavlja maksimalno gibanje v danem letu.</h3>
+<h3> {{ max_leto }}</h3>
+<hr>
+% if  kalo  == []:
+   Vpišite novo gibanje!
+% else:
+<h2>Porabili ste:</h2>
+    {{ kalo[-1][0] }} kalorij in  {{ kalo[-1][1] }} kisika.
+% end
+
