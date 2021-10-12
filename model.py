@@ -2,18 +2,72 @@ from datetime import *
 import json
 import datetime
 
+class Uporabnik:
+    def __init__(self, uporabnisko_ime, gibanja):
+        self.uporabnisko_ime = uporabnisko_ime
+        self.gibanja = Analiza(gibanja)
 
-class MerilnikTeka:
-    OSNOVNA_PORABA_KISIKA = 3.5
+    @staticmethod
+    def iz_slovarja_uporabnik(slovar):
+        uporabnisko_ime = slovar['uporabnisko_ime']
+        gibanja = Uporabnik.uporabnik_preberi_iz_datoteke(slovar['gibanja'])
+        return Uporabnik(uporabnisko_ime, gibanja)
+
+    def v_slovar_uporabnik(self):
+        return {
+            "uporabnisko_ime": self.uporabnisko_ime,
+            "gibanja": self.gibanja.v_slovar_uporabnik_gibanje()
+        }
+
+    def shrani_v_datoteko_uporabnik(self):
+        with open(self.ime_uporabnikove_datoteke(self.uporabnisko_ime), "w") as dat:
+            json.dump(self.v_slovar_uporabnik(), dat, ensure_ascii=False, indent=4)
+
+    @staticmethod
+    def ime_uporabnikove_datoteke(uporabnisko_ime):
+        return f'{uporabnisko_ime}.json'
+    
+    @staticmethod
+    def uporabnik_preberi_iz_datoteke(uporabnisko_ime):
+        sez = []
+        with open(Uporabnik.ime_uporabnikove_datoteke(uporabnisko_ime), 'r') as dat:
+            seznam = json.load(dat)
+            for gibanje in seznam['gibanja']:
+                sez.append(Analiza.iz_slovarja(gibanje))
+        for gib in Analiza(sez).seznam_gibanj:
+            gib.datum = gib.datum.replace('"', '')
+        return Uporabnik(uporabnisko_ime, sez)
+
+    def v_slovar_uporabnik_gibanje(self):
+        sez = []
+        for gibanje in self.seznam_gibanj:
+            d = gibanje.datum
+            if not isinstance(d, str):
+                d = d.isoformat()
+            else:
+                d = gibanje.datum
+            json_datum = json.dumps(d)
+            gib = {
+                "dolzina": gibanje.dolzina,
+                "cas": gibanje.cas,
+                "nacin": gibanje.nacin,
+                "strmina": gibanje.strmina,
+                "teza": gibanje.teza,
+                "datum": json_datum
+            }
+            sez.append(gib)
+        return sez
+
+class MerilnikGibanja:
 
     def __init__(self, dolzina, cas, nacin, strmina, teza):
         self.dolzina = dolzina
         self.cas = cas
         self.nacin = nacin
-        """ Pri načinu tek predstavlja resnico, hoja pa laž """
+        """ Pri načinu tek predstavlja resnico(True), hoja pa laž(False) """
         self.strmina = strmina
         self.teza = teza
-
+        self.OSNOVNA_PORABA_KISIKA = 3.5
     """za strmino nastavijo pri tekstovnemu vmesniku:"""
     """-brez = 0 %"""
     """-majhen klanec = 5 %"""
@@ -41,9 +95,9 @@ class MerilnikTeka:
 
     def poraba_kisika(self):
         if self.nacin:
-            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + OSNOVNA_PORABA_KISIKA
+            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + self.OSNOVNA_PORABA_KISIKA
         else:
-            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + OSNOVNA_PORABA_KISIKA
+            return self.hitrost() * self.poraba_kisika_horizontalno() + self.hitrost() * self.odvisnost_vertikalnega_gibanja_od_strmine() + self.OSNOVNA_PORABA_KISIKA
 
     def poraba_kisika_s_tezo(self):
         return str(round(self.poraba_kisika() * self.teza * self.cas, 2)) + ' ml/(kg min)'
@@ -51,10 +105,9 @@ class MerilnikTeka:
     def poraba_kalorij(self):
         return str(round(float(self.poraba_kisika_s_tezo()[:-12]) * 5, 2)) + ' kcal'
 
-
-class Uporabnik:
+class Analiza:
     def __init__(self, seznam_gibanj):
-        self.seznam_gibanj = sorted(seznam_gibanj, key=lambda x: x.datum)
+        self.seznam_gibanj = seznam_gibanj
         """
         Seznam gibanj kot elemente vsebuje posamezna gibanja, 1 uporabnik ima več gibanj.
         """
@@ -76,13 +129,14 @@ class Uporabnik:
 
     def naredi_slovar_aktualnih_let(self):
         slovar_let = {}
-        for leto in range(2021, Uporabnik.vrni_leto() + 6):
+        for leto in range(2021, Analiza.vrni_leto() + 1):
             slovar_let[leto] = {'tek': [[] for i in range(1, 13)], 'hoja': [[] for i in range(1, 13)]}
         return slovar_let
 
     def razdeli_po_letih(self):
         slovar_let = self.naredi_slovar_aktualnih_let()
-        for gibanje in self.seznam_gibanj:
+        gibanja = sorted(self.seznam_gibanj, key=lambda x: x.datum)
+        for gibanje in gibanja:
             leto_gibanja = int(gibanje.datum.strftime("%Y"))
             for leto in slovar_let.keys():
                 if leto_gibanja == leto:
@@ -96,7 +150,8 @@ class Uporabnik:
 
     def razdeli_po_mesecih(self):
         slovar_let = self.naredi_slovar_aktualnih_let()
-        for gibanje in self.seznam_gibanj:
+        gibanja = sorted(self.seznam_gibanj, key=lambda x: x.datum)
+        for gibanje in gibanja:
             leto_gibanja = int(gibanje.datum.strftime("%Y"))
             for leto in slovar_let.keys():
                 if leto_gibanja == leto:
@@ -130,7 +185,7 @@ class Uporabnik:
                 meseci = slovar_posameznega[nacin]
                 for i in range(12):
                     gibanja = meseci[i]
-                    vsota = 0
+                    vsota = 0.0
                     for gibanje in gibanja:
                         if gibanje == []:
                             continue
@@ -141,7 +196,18 @@ class Uporabnik:
             slovar_dolzin[leto] = slovar_posameznega
         return slovar_dolzin
 
-    def povprečje_gibanja(self):
+    def novo_povp_mesec(self):
+        slovar = self.vsota_gibanja()
+        for leto in slovar.keys():
+            slovar_posameznega = slovar[leto]
+            for nacin in slovar_posameznega:
+                meseci = slovar_posameznega[nacin]
+                for i in range(len(meseci)):
+                    nov = meseci[i]
+                    meseci[i] = [round(nov.pop() / 30, 2)]
+        return slovar
+
+    def max_gibanja_za_vsak_mesec(self):
         slovar_dolzin = self.izpis_gibanja()
         for leto in slovar_dolzin.keys():
             slovar_posameznega = slovar_dolzin[leto]
@@ -149,33 +215,9 @@ class Uporabnik:
                 meseci = slovar_posameznega[nacin]
                 for i in range(12):
                     gibanja = meseci[i]
-                    vsota = 0
-                    frekvenca = 0
+                    maks = 0.0
                     if gibanja == []:
-                        frekvenca = 1
-                    else:
-                        for gibanje in gibanja:
-                            if gibanje == []:
-                                continue
-                            else:
-                                vsota += float(gibanje)
-                                frekvenca += 1
-                    meseci[i] = [round(vsota / frekvenca, 2)]
-                slovar_posameznega[nacin] = meseci
-            slovar_dolzin[leto] = slovar_posameznega
-        return slovar_dolzin
-
-    def max_gibanja_za_vsak_mesec(self):
-        slovar_dolzin = self.vsota_gibanja()
-        for leto in slovar_dolzin.keys():
-            slovar_posameznega = slovar_dolzin[leto]
-            for nacin in slovar_posameznega:
-                meseci = slovar_posameznega[nacin]
-                for i in range(12):
-                    gibanja = meseci[i]
-                    maks = 0
-                    if gibanja == []:
-                        maks = 0
+                        maks = 0.0
                     else:
                         for gibanje in gibanja:
                             maks = max(maks, gibanje)
@@ -205,27 +247,14 @@ class Uporabnik:
             slovar_dolzin[leto] = slovar_posameznega
         return slovar_dolzin
 
-    def povprečje_gibanja_po_letih(self):
-        slovar_dolzin = self.izpis_gibanja()
-        for leto in slovar_dolzin.keys():
-            slovar_posameznega = slovar_dolzin[leto]
+    def novo_povp(self):
+        slovar = self.vsota_gibanja_po_letih()
+        for leto in slovar.keys():
+            slovar_posameznega = slovar[leto]
             for nacin in slovar_posameznega:
-                meseci = slovar_posameznega[nacin]
-                vsota = 0.0
-                frekvenca = 0
-                if meseci == [[] for i in range(12)]:
-                    frekvenca = 1
-                else:
-                    for gibanja in meseci:
-                        if gibanja == []:
-                            continue
-                        else:
-                            for gibanje in gibanja:
-                                vsota += float(gibanje)
-                                frekvenca += 1
-                slovar_posameznega[nacin] = round(vsota / frekvenca, 2)
-            slovar_dolzin[leto] = slovar_posameznega
-        return slovar_dolzin
+                nov = slovar_posameznega[nacin]
+                slovar_posameznega[nacin] = round(nov / 365, 2)
+        return slovar
 
     def max_gibanja_po_letih(self):
         slovar_vsot = self.vsota_gibanja_po_letih()
@@ -251,54 +280,11 @@ class Uporabnik:
     Ta funkcija dodaja nova gibanja v naš seznam gibanj
     """
 
-    def dodaj(self, gibanje):
-        self.seznam_gibanj.append(gibanje)
+    def dodaj(self, novo_gibanje):
+        self.seznam_gibanj.append(novo_gibanje)
 
-    def izbris_zadnjega_dodanega_elementa(self):
-        self.seznam_gibanj.pop()
-        return self.seznam_gibanj
-
-    @staticmethod
-    def iz_slovarja(slovar):
-        return DnevnikGibanja(
-            dolzina=int(slovar["dolzina"]),
-            cas=int(slovar["cas"]),
-            nacin=bool(slovar["nacin"]),
-            strmina=slovar["strmina"],
-            teza=int(slovar["teza"]),
-            datum=slovar["datum"]
-        )
-
-    def v_slovar(self):
-        return {
-            "dolzina": self.dolzina,
-            "cas": self.cas,
-            "nacin": self.nacin,
-            "strmina": self.strmina,
-            "teza": self.teza,
-            "datum": self.datum
-        }
-
-    def shrani_v_datoteko(self, ime_datoteke):
-        with open(ime_datoteke, "w") as dat:
-            slovar = self.v_slovar()
-            json.dump(slovar, dat)
-
-    @staticmethod
-    def preberi_iz_datoteke(ime_datoteke):
-        with open(ime_datoteke) as dat:
-            slovar = json.load(dat)
-            return Uporabnik.iz_slovarja(slovar)
-
-
-class DnevnikGibanja:
-    def __init__(self, dolzina, cas, nacin, strmina, teza, datum):
-        self.dolzina = dolzina
-        self.cas = cas
-        self.nacin = nacin
-        self.strmina = strmina
-        self.teza = teza
-        self.datum = datum
+    def izbris_zadnjega_elementa(self):
+        del self.seznam_gibanj[-1]
 
     @staticmethod
     def iz_slovarja(slovar):
@@ -308,32 +294,106 @@ class DnevnikGibanja:
             nacin=bool(slovar["nacin"]),
             strmina=int(slovar["strmina"]),
             teza=int(slovar["teza"]),
-            # datum=slovar["datum"]
-            datum=datetime.datetime.strptime(slovar["datum"], "%Y-%m-%d").date()
+            datum=slovar["datum"]
         )
 
     def v_slovar(self):
-        return {
-            "dolzina": self.dolzina,
-            "cas": self.cas,
-            "nacin": self.nacin,
-            "strmina": self.strmina,
-            "teza": self.teza,
-            "datum": str(self.datum)
-        }
+        slo = {'gibanja': []}
+        for gibanje in self.seznam_gibanj:
+            d = gibanje.datum
+            if not isinstance(d, str):
+                d = d.isoformat()
+            else:
+                d = gibanje.datum
+            json_datum = json.dumps(d)
+            gib = {
+                "dolzina": gibanje.dolzina,
+                "cas": gibanje.cas,
+                "nacin": gibanje.nacin,
+                "strmina": gibanje.strmina,
+                "teza": gibanje.teza,
+                "datum": json_datum
+            }
+            slo["gibanja"].append(gib)
+        return slo
 
-    # Naredi za shranjevanje gibanja v eno datoteko.
     def shrani_v_datoteko(self, ime_datoteke):
         with open(ime_datoteke, "w") as dat:
-            # json.dump({"dolzina": self.dolzina}, dat, ensure_ascii=False, indent=4)
-            json.dump(self.v_slovar(), dat, ensure_ascii=False, indent=4)
+            slovar = self.v_slovar()
+            json.dump(slovar, dat)
 
     @staticmethod
     def preberi_iz_datoteke(ime_datoteke):
-        with open(ime_datoteke) as dat:
-            slovar = json.load(dat)
-            return DnevnikGibanja.iz_slovarja(slovar)
+        sez = []
+        with open(ime_datoteke, 'r') as dat:
+            seznam = json.load(dat)
+            gibanja = seznam['gibanja']
+            for gibanje in gibanja:
+                sez.append(Analiza.iz_slovarja(gibanje))
+        for gib in Analiza(sez).seznam_gibanj:
+            gib.datum = gib.datum.replace('"', '')
+        return Analiza(sez)
+    
+    def v_slovar_uporabnik_gibanje(self):
+        sez = []
+        for gibanje in self.seznam_gibanj:
+            d = gibanje.datum
+            if not isinstance(d, str):
+                d = d.isoformat()
+            else:
+                d = gibanje.datum
+            json_datum = json.dumps(d)
+            gib = {
+                "dolzina": gibanje.dolzina,
+                "cas": gibanje.cas,
+                "nacin": gibanje.nacin,
+                "strmina": gibanje.strmina,
+                "teza": gibanje.teza,
+                "datum": json_datum
+            }
+            sez.append(gib)
+        return sez
 
+    @staticmethod
+    def pretvori_datum_iz_jsona_v_datetime(gibanje):
+        gibanje.datum.replace('\\', '').replace('"', '')
+        gibanje.datum = datetime.datetime.strptime(gibanje.datum[:10], '%Y-%m-%d')
+        return gibanje
+
+    @staticmethod
+    def ali_je_v_datetime(seznam):
+        for gibanje in seznam.seznam_gibanj:
+            if gibanje.datum != datetime.strptime(gibanje.datum, "%Y-%m-%d").strftime('%Y-%m-%d'):
+                return False
+        return True
+
+    def koncna_za_datume(self):
+        prava = self.seznam_gibanj
+        sez = Analiza([])
+        if prava != []:
+            prvi = prava[0]
+            zadnji = prava[-1]
+            if type(prvi.datum) is str:
+                for i in range(len(prava) - 1):
+                    sez.seznam_gibanj.append(Analiza.pretvori_datum_iz_jsona_v_datetime(prava[i]))
+            else:
+                for i in range(len(prava) - 1):
+                    sez.seznam_gibanj.append(prava[i])
+            if type(zadnji.datum) is str:
+                sez.seznam_gibanj.append(Analiza.pretvori_datum_iz_jsona_v_datetime(prava[-1]))
+            else:
+                sez.seznam_gibanj.append(prava[-1])
+        return sez
+
+class DnevnikGibanja:
+    def __init__(self, dolzina, cas, nacin, strmina, teza, datum):
+        self.dolzina = dolzina
+        self.cas = cas
+        self.nacin = nacin
+        self.strmina = strmina
+        self.teza = teza
+        self.datum = datum
+    
     @staticmethod
     def iz_slovarja_v_seznam(slo):
         prazen = []
@@ -352,19 +412,7 @@ class DnevnikGibanja:
         slo['datum'] = sez[5]
         return slo
 
-
-#    @staticmethod
-#   def iz_slovarja(slovar):
-#      gibanja = Uporabnik()
-#     gibanja.seznam_gibanj = [
-#        Spisek.iz_slovarja(sl_spiska) for sl_spiska in slovar["spiski"]
-#   ]
-#  if slovar["aktualni_spisek"] is not None:
-#     stanje.aktualni_spisek = stanje.spiski[slovar["aktualni_spisek"]]
-# return stanje
-
-
-danesss = MerilnikTeka(5.6, 6, True, 5, 60)
+danesss = MerilnikGibanja(5.6, 6, True, 5, 60)
 danes_poskus1 = DnevnikGibanja(4.5, 5, True, 5, 5, date.today())
 danes_poskus2 = DnevnikGibanja(5.2, 6, False, 3, 4, date.today())
 danes_poskus3 = DnevnikGibanja(6.4, 2, False, 2, 4, date.today())
@@ -381,6 +429,9 @@ dve_leti_naprej_poskus = DnevnikGibanja(46, 3, True, 4, 70, dve_leti_naprej)
 tri_leta_naprej = date.today() + timedelta(days=3 * 330)
 tri_leta_naprej_poskus = DnevnikGibanja(23, 4, True, 5, 66, tri_leta_naprej)
 
-u = Uporabnik([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
+u = Analiza([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
                prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan, dve_leti_naprej_poskus])
-w = Uporabnik([danes_poskus1, vcerajsnji_dan, prejsnji_mesec])
+w = Analiza([danes_poskus1, vcerajsnji_dan, prejsnji_mesec])
+k = Analiza([])
+o = None
+

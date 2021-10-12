@@ -7,9 +7,9 @@ def krepko(niz):
 
 DATOTEKA_S_STANJEM = "stanje.json"
 try:
-    gibanja = Uporabnik.preberi_iz_datoteke(DATOTEKA_S_STANJEM)
+    gibanja = Analiza.preberi_iz_datoteke(DATOTEKA_S_STANJEM)
 except FileNotFoundError:
-    gibanja = Uporabnik([])
+    gibanja = Analiza([])
 
 DODAJ_GIBANJE = 1
 IZBRIS_ZADNJEGA_GIBANJA = 2
@@ -150,6 +150,4 @@ def max_gibanja_po_letih():
     print(gib.max_gibanja_po_letih())
 
 tekstovni_vmesnik()
-
-
 
