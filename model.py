@@ -1,46 +1,84 @@
-from datetime import *
+from datetime import date, datetime, timedelta
 import json
-import datetime
+import hashlib
+import random
+
 
 class Uporabnik:
-    def __init__(self, uporabnisko_ime, gibanja):
+    def __init__(self, uporabnisko_ime, zasifrirano_geslo, gibanja):
         self.uporabnisko_ime = uporabnisko_ime
-        self.gibanja = Analiza(gibanja)
-
-    @staticmethod
-    def iz_slovarja_uporabnik(slovar):
-        uporabnisko_ime = slovar['uporabnisko_ime']
-        gibanja = Uporabnik.uporabnik_preberi_iz_datoteke(slovar['gibanja'])
-        return Uporabnik(uporabnisko_ime, gibanja)
+        self.zasifrirano_geslo = zasifrirano_geslo
+        self.gibanja = gibanja
 
     def v_slovar_uporabnik(self):
         return {
             "uporabnisko_ime": self.uporabnisko_ime,
-            "gibanja": self.gibanja.v_slovar_uporabnik_gibanje()
+            'zasifrirano_geslo': self.zasifrirano_geslo,
+            "gibanja": self.gibanja.v_slovar_uporabnik_gibanje(),
         }
 
     def shrani_v_datoteko_uporabnik(self):
+        """podatke shrani v datoteko"""
         with open(self.ime_uporabnikove_datoteke(self.uporabnisko_ime), "w") as dat:
             json.dump(self.v_slovar_uporabnik(), dat, ensure_ascii=False, indent=4)
 
     @staticmethod
     def ime_uporabnikove_datoteke(uporabnisko_ime):
-        return f'{uporabnisko_ime}.json'
-    
+         return f'{uporabnisko_ime}.json'
+
+    @staticmethod
+    def iz_slovarja_uporabnik(slovar):
+        uporabnisko_ime = slovar['uporabnisko_ime']
+        zasifrirano_geslo = slovar['zasifrirano_geslo']
+        gibanja = Analiza.iz_slovarja_vsi(slovar)
+        return Uporabnik(uporabnisko_ime, zasifrirano_geslo, gibanja)
+
     @staticmethod
     def uporabnik_preberi_iz_datoteke(uporabnisko_ime):
-        sez = []
-        with open(Uporabnik.ime_uporabnikove_datoteke(uporabnisko_ime), 'r') as dat:
-            seznam = json.load(dat)
-            for gibanje in seznam['gibanja']:
-                sez.append(Analiza.iz_slovarja(gibanje))
-        for gib in Analiza(sez).seznam_gibanj:
-            gib.datum = gib.datum.replace('"', '')
-        return Uporabnik(uporabnisko_ime, sez)
+        try:
+            with open(Uporabnik.ime_uporabnikove_datoteke(uporabnisko_ime), 'r') as dat:
+                slovar = json.load(dat)
+                return Uporabnik.iz_slovarja_uporabnik(slovar)
+        except FileNotFoundError:
+            return None
+
+    def _zasifriraj_geslo(geslo_v_cistopisu, sol=None):
+        if sol is None:
+            sol = str(random.getrandbits(32))
+        posoljeno_geslo = sol + geslo_v_cistopisu
+        h = hashlib.blake2b()
+        h.update(posoljeno_geslo.encode(encoding="utf-8"))
+        return f"{sol}${h.hexdigest()}"
+
+    def preveri_geslo(self, geslo_v_cistopisu):
+        sol, _ = self.zasifrirano_geslo.split("$")
+        return self.zasifrirano_geslo == Uporabnik._zasifriraj_geslo(geslo_v_cistopisu, sol)
+
+
+    @staticmethod
+    def prijava(uporabnisko_ime, geslo_v_cistopisu):
+        uporabnik = Uporabnik.uporabnik_preberi_iz_datoteke(uporabnisko_ime)
+        if uporabnik is None:
+            raise ValueError("Uporabniško ime ne obstaja")
+        elif uporabnik.preveri_geslo(geslo_v_cistopisu):
+            return uporabnik
+        else:
+            raise ValueError("Geslo je napačno")
+
+    @staticmethod
+    def registracija(uporabnisko_ime, geslo_v_cistopisu):
+        if Uporabnik.uporabnik_preberi_iz_datoteke(uporabnisko_ime) is not None:
+            raise ValueError("Uporabniško ime že obstaja")
+        else:
+            zasifrirano_geslo = Uporabnik._zasifriraj_geslo(geslo_v_cistopisu)
+            uporabnik = Uporabnik(uporabnisko_ime, zasifrirano_geslo, Analiza([]))
+            uporabnik.shrani_v_datoteko_uporabnik()
+            return uporabnik
+
 
     def v_slovar_uporabnik_gibanje(self):
         sez = []
-        for gibanje in self.seznam_gibanj:
+        for gibanje in self.gibanja.seznam_gibanj:
             d = gibanje.datum
             if not isinstance(d, str):
                 d = d.isoformat()
@@ -57,6 +95,7 @@ class Uporabnik:
             }
             sez.append(gib)
         return sez
+    
 
 class MerilnikGibanja:
 
@@ -114,17 +153,17 @@ class Analiza:
 
     @staticmethod
     def vrni_dan():
-        danasnji_datum = datetime.date.today()
+        danasnji_datum = datetime.today()
         return danasnji_datum.strftime("%d")
 
     @staticmethod
     def vrni_mesec():
-        danasnji_datum = datetime.date.today()
+        danasnji_datum = datetime.today()
         return int(danasnji_datum.strftime("%m"))
 
     @staticmethod
     def vrni_leto():
-        danasnji_datum = datetime.date.today()
+        danasnji_datum = datetime.today()
         return int(danasnji_datum.strftime("%Y"))
 
     def naredi_slovar_aktualnih_let(self):
@@ -279,7 +318,6 @@ class Analiza:
     """
     Ta funkcija dodaja nova gibanja v naš seznam gibanj
     """
-
     def dodaj(self, novo_gibanje):
         self.seznam_gibanj.append(novo_gibanje)
 
@@ -316,6 +354,16 @@ class Analiza:
             }
             slo["gibanja"].append(gib)
         return slo
+
+    @staticmethod
+    def iz_slovarja_vsi(slovar):
+        sez = []
+        for gibanje in slovar['gibanja']:
+            sez.append(Analiza.iz_slovarja(gibanje))
+        for gib in Analiza(sez).seznam_gibanj:
+            gib.datum = gib.datum.replace('"', '')
+        return Analiza(sez)
+
 
     def shrani_v_datoteko(self, ime_datoteke):
         with open(ime_datoteke, "w") as dat:
@@ -357,7 +405,7 @@ class Analiza:
     @staticmethod
     def pretvori_datum_iz_jsona_v_datetime(gibanje):
         gibanje.datum.replace('\\', '').replace('"', '')
-        gibanje.datum = datetime.datetime.strptime(gibanje.datum[:10], '%Y-%m-%d')
+        gibanje.datum = datetime.strptime(gibanje.datum[:10], '%Y-%m-%d')
         return gibanje
 
     @staticmethod

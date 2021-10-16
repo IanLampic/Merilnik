@@ -1,27 +1,27 @@
 % rebase('osnovava.html')
-<h1>Pozdravljen {{ uporabnik }}!</h1>
+<p> {{ uporabnik.uporabnisko_ime }}</p>
 <form method="POST">
     <div class="field">
-        <label class="label">Novo gibanje</label>
+        <label class="label">Vpiši novo gibanje</label>
         <div class="control has-icons-left has-icons-right">
             <h2>Napišite koliko ste pretekli (v kilometrih), koliko časa ste se gibali (v urah), kako ste se gibali (za tek napišite: True, za hojo pa: False), kakšna je bila strmina vašega gibanja (napišite število med 0 (brez strmine) in 30 (zelo velik klanec)) in vašo telesno težo.</h2>
-            <input class="input" name="dolzina" type="text" placeholder="dolzina">
-            <input class="input" name="cas" type="text" placeholder="cas">
-            <input class="input" name="nacin" type="text" placeholder="nacin">
+            <input class="input" name="dolzina" type="text" placeholder="dolžina">
+            <input class="input" name="cas" type="text" placeholder="čas">
+            <input class="input" name="nacin" type="text" placeholder="način">
             <input class="input" name="strmina" type="text" placeholder="strmina">
-            <input class="input" name="teza" type="text" placeholder="teza">
+            <input class="input" name="teza" type="text" placeholder="teža">
         </div>
     </div>
     <div class="field is-grouped">
         <div class="control">
-            <button class="button is-link">Dodaj</button>
+            <button class="button is-primary">Dodaj</button>
         </div>
         <div class="control">
-            <a class="button is-link is-light" href="/">Prekliči</a>
+            <a class="button is-default" href="/">Prekliči</a>
         </div>
     </div>
 </form>
 
 <div class="level-item">
-    <a class="button is-info" href="/">Začetna stran</a>
+    <a class="button is-primary" href="/">Začetna stran</a>
 </div>
