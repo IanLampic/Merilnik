@@ -1,10 +1,12 @@
 % rebase('osnovava.html')
-<p> {{ uporabnik.uporabnisko_ime }}</p>
+<div class="box">
 <form method="POST">
     <div class="field">
         <label class="label">Vpiši novo gibanje</label>
         <div class="control has-icons-left has-icons-right">
-            <h2>Napišite koliko ste pretekli (v kilometrih), koliko časa ste se gibali (v urah), kako ste se gibali (za tek napišite: True, za hojo pa: False), kakšna je bila strmina vašega gibanja (napišite število med 0 (brez strmine) in 30 (zelo velik klanec)) in vašo telesno težo.</h2>
+            <h2>Napišite koliko ste pretekli (v kilometrih), koliko časa ste se gibali (v urah), kako ste se gibali (za tek napišite: True, za hojo pa: False), kakšna je bila strmina vašega gibanja (napišite število med 0 (brez strmine) in 30 (zelo velik klanec)) in vašo telesno težo.
+                Če želite napisati decimalno število, namesto vejice uporabite piko.
+            </h2>
             <input class="input" name="dolzina" type="text" placeholder="dolžina">
             <input class="input" name="cas" type="text" placeholder="čas">
             <input class="input" name="nacin" type="text" placeholder="način">
@@ -14,7 +16,7 @@
     </div>
     <div class="field is-grouped">
         <div class="control">
-            <button class="button is-primary">Dodaj</button>
+            <button style="border-color: rgb(44, 180, 153)" class="button is-primary">Dodaj</button>
         </div>
         <div class="control">
             <a class="button is-default" href="/">Prekliči</a>
@@ -23,5 +25,8 @@
 </form>
 
 <div class="level-item">
-    <a class="button is-primary" href="/">Začetna stran</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/">Začetna stran</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/izbris-zadnjega-gibanja/">Izbrisati zadnje gibanje</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/analiza/">Analiza</a>
+</div>
 </div>

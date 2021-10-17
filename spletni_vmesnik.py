@@ -98,16 +98,19 @@ def dodaj_gibanje_post():
     bottle.redirect("/")
 
 @bottle.get('/izbris-zadnjega-gibanja/')
-def izbris_zadnjega_gibanja():
-    return bottle.template("izbris_gibanja.html",
-                            uporbnik = trenutni_uporabnik(),
-                             napaka=None)
+def izbris_zadnjega_gibanja_get():
+    uporabnik = trenutni_uporabnik()
+    if len(uporabnik.gibanja.seznam_gibanj) > 0:
+        uporabnik.gibanja.izbris_zadnjega_elementa()
+        shrani_stanje(uporabnik)
+    return bottle.template(
+        "izbris_gibanja.html",
+        uporabnik = trenutni_uporabnik(),
+        gibanja = trenutni_uporabnik().gibanja.seznam_gibanj,
+        napaka=None)
 
 @bottle.post('/izbris-zadnjega-gibanja/')
-def izbris_zadnjega_gibanja():
-    uporabnik = trenutni_uporabnik()
-    del uporabnik.gibanja.seznam_gibanj[-1]
-    shrani_stanje(uporabnik)
+def izbris_zadnjega_gibanja_post():
     bottle.redirect('/')
 
 @bottle.get("/analiza/")
@@ -128,7 +131,7 @@ def analiza():
 @bottle.error(404)
 def error_404(error):
     return 'Ta stran ne obstaja!'
- #TODO: Dokončaj analizo, polepšaj izpis uporabniškega imena, premisli glede nacina
+ #TODO: premisli glede nacina
 bottle.run(reloader=True, debug=True)
 
 

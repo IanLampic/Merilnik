@@ -1,40 +1,47 @@
 % rebase('osnovava.html')
-<p>{{uporabnik.uporabnisko_ime}}</p>
 <div class="box">
     <div class="box">
-        <p>Tukaj pišejo vse potrebne informacije za analizo</p>
+        <p>To ja analiza vašega gibanja. Gibate se lahko na dva načina, in sicer lahko tečete (za to napišite True) 
+            ali pa hodite (za to napišite False).
+            Prikazanih je šest različnih prikazovanj podatkov:
+            vsota vseh gibanj v mesecu, povprečje vsakega meseca, maksimum vsakega meseca (največ gibanja v enem dnevu),
+            vsota vseh gibanj v letu, povprečje vsakega leta, maksimum po letih, kar pa vrne leto, ko si se največ gibal (za tek in za hojo).
+            Pri prvih treh gibanjih najbolj notranji oglati oklepaji predstavljajo en mesec.
+        </p>
     </div>
     <br>
     <p>
-       Vsota gibanj
+       Vsota gibanj v mesecu
     </p>
        <li>{{ vsota }} </li> 
     <hr>
     <p>
-       Povprecje
+       Povprečje gibanj v mesecu
     </p>
         <li> {{ povprecje_meseca }}</li>
     <hr>
     <p>
-        Maks mesec
+        Maksimum v mesecu
      </p>
         <li> {{ maks_mesec }}</li>
     <hr>
     <p>
-        Vsota leta
+        Vsota gibanj v letu
     </p>
         <li> {{ vsota_leta }}</li>
     <hr>
     <p>
-        Povprecje leta
+        Povprečje gibanj v letu
     </p>
         <li> {{ povprecje_leta }}</li>
     <hr>
     <p>
-        Maks leta
+        Maksimum gibanj izmed let
     </p>
         <li> {{ maks_leta }}</li>
     <hr>
 <div class="level-item">
-    <a class="button is-primary" href="/">Začetna stran</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/">Začetna stran</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/dodaj-gibanje/">Dodaj novo gibanje.</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/izbris-zadnjega-gibanja/">Izbrisati zadnje gibanje</a>
 </div>
