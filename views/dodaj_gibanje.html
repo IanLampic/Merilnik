@@ -4,10 +4,10 @@
     <div class="field">
         <label class="label">Vpiši novo gibanje</label>
         <div class="control has-icons-left has-icons-right">
-            <h2>Napišite koliko ste pretekli (v kilometrih), koliko časa ste se gibali (v urah), kako ste se gibali (za tek napišite: True, za hojo pa: False), kakšna je bila strmina vašega gibanja (napišite število med 0 (brez strmine) in 30 (zelo velik klanec)) in vašo telesno težo.
+            <h2>Napišite koliko ste pretekli (v kilometrih), koliko časa ste se gibali (v urah), kako ste se gibali (če ste tekli napišite tek, za hojo pa hoja), kakšna je bila strmina vašega gibanja (napišite število med 0 (brez strmine) in 30 (zelo strm klanec)) in vašo telesno težo.
                 Če želite napisati decimalno število, namesto vejice uporabite piko.
             </h2>
-            <input class="input" name="dolzina" type="text" placeholder="dolžina">
+            <input style='margin-top: 10px;' class="input" name="dolzina" type="text" placeholder="dolžina">
             <input class="input" name="cas" type="text" placeholder="čas">
             <input class="input" name="nacin" type="text" placeholder="način">
             <input class="input" name="strmina" type="text" placeholder="strmina">
@@ -21,12 +21,15 @@
         <div class="control">
             <a class="button is-default" href="/">Prekliči</a>
         </div>
+        % if napaka:
+        <p style='margin-top: 20px;' class="help is-danger">{{ napaka }}</p>
+        % end
     </div>
 </form>
 
 <div class="level-item">
-    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/">Začetna stran</a>
-    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/izbris-zadnjega-gibanja/">Izbrisati zadnje gibanje</a>
-    <a style="border-color: rgb(44, 180, 153); margin-left: 10px;" class="button is-primary" href="/analiza/">Analiza</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px; margin-top: 20px;" class="button is-primary" href="/">Začetna stran</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px; margin-top: 20px" class="button is-primary" href="/izbris-zadnjega-gibanja/">Izbriši zadnje dodano gibanje</a>
+    <a style="border-color: rgb(44, 180, 153); margin-left: 10px; margin-top: 20px" class="button is-primary" href="/analiza/">Analiza</a>
 </div>
 </div>

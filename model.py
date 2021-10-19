@@ -460,26 +460,5 @@ class DnevnikGibanja:
         slo['datum'] = sez[5]
         return slo
 
-danesss = MerilnikGibanja(5.6, 6, True, 5, 60)
-danes_poskus1 = DnevnikGibanja(4.5, 5, True, 5, 5, date.today())
-danes_poskus2 = DnevnikGibanja(5.2, 6, False, 3, 4, date.today())
-danes_poskus3 = DnevnikGibanja(6.4, 2, False, 2, 4, date.today())
-danes_poskus4 = DnevnikGibanja(8.2, 2, False, 2, 4, date.today())
-danes_poskus5 = DnevnikGibanja(1, 2, True, 2, 4, date.today())
-danes_poskus6 = DnevnikGibanja(9, 2, True, 2, 4, date.today())
-danes_poskus7 = DnevnikGibanja(10.23, 2, False, 2, 4, date.today())
-prejsnji_mesec = DnevnikGibanja(12, 3, True, 4, 5, date.today() - timedelta(days=30))
-vcerajsnji_datum = date.today() - timedelta(days=1)
-vcerajsnji_dan = DnevnikGibanja(12, 4, True, 43, 5, vcerajsnji_datum)
-prejsnji_mesec_datum = date.today() - timedelta(days=30)
-dve_leti_naprej = date.today() + timedelta(days=2 * 330)
-dve_leti_naprej_poskus = DnevnikGibanja(46, 3, True, 4, 70, dve_leti_naprej)
-tri_leta_naprej = date.today() + timedelta(days=3 * 330)
-tri_leta_naprej_poskus = DnevnikGibanja(23, 4, True, 5, 66, tri_leta_naprej)
 
-u = Analiza([danes_poskus1, danes_poskus2, danes_poskus3, danes_poskus4, danes_poskus5, danes_poskus6, danes_poskus7,
-               prejsnji_mesec, tri_leta_naprej_poskus, vcerajsnji_dan, dve_leti_naprej_poskus])
-w = Analiza([danes_poskus1, vcerajsnji_dan, prejsnji_mesec])
-k = Analiza([])
-o = None
 

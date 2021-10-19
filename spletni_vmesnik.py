@@ -84,15 +84,27 @@ def dodaj_gibanje():
 def dodaj_gibanje_post():
     kalorije.clear()
     uporabnik = trenutni_uporabnik()
-    dolzina = float(bottle.request.forms['dolzina'])
+    dolzina = bottle.request.forms['dolzina']
+    cas = bottle.request.forms['cas']
+    nacin = bottle.request.forms['nacin']
+    if nacin.lower() == 'tek':
+        n_nacin = True
+    elif nacin.lower() == 'hoja':
+        n_nacin = False
+    else:
+        return bottle.template('dodaj_gibanje.html', uporabnik = trenutni_uporabnik(), napaka='Niste pravilno definirali načina gibanja.')
+    strmina = bottle.request.forms['strmina']
+    teza = bottle.request.forms['teza']
+    if not ali_je_stevilo(dolzina) or not ali_je_stevilo(cas) or not ali_je_stevilo(strmina) or not ali_je_stevilo(teza):
+        return bottle.template('dodaj_gibanje.html', uporabnik = trenutni_uporabnik(), napaka='Na enem izmed mest niste vpisali števila.')
+    dolzina = float(dolzina)
     cas = float(bottle.request.forms['cas'])
-    nacin = bool(bottle.request.forms['nacin'])
-    strmina = float(bottle.request.forms['strmina'])
+    strmina = float(bottle.request.forms['strmina'])        
     teza = float(bottle.request.forms['teza'])
     datum = date.today().strftime('%Y-%m-%d')
-    uporabnik.gibanja.dodaj(DnevnikGibanja(dolzina, cas, nacin, strmina, teza, datum))
-    kalorija = MerilnikGibanja(dolzina, cas, nacin, strmina, teza).poraba_kalorij()
-    kisik = MerilnikGibanja(dolzina, cas, nacin, strmina, teza).poraba_kisika_s_tezo()
+    uporabnik.gibanja.dodaj(DnevnikGibanja(dolzina, cas, n_nacin, strmina, teza, datum))
+    kalorija = MerilnikGibanja(dolzina, cas, n_nacin, strmina, teza).poraba_kalorij()
+    kisik = MerilnikGibanja(dolzina, cas, n_nacin, strmina, teza).poraba_kisika_s_tezo()
     kalorije.append([kalorija, kisik])
     shrani_stanje(uporabnik)
     bottle.redirect("/")
@@ -127,11 +139,18 @@ def analiza():
         maks_leta = uporabnik.gibanja.koncna_za_datume().max_gibanja_po_letih(),
         uporabnik = trenutni_uporabnik()
     )
+def ali_je_stevilo(n):
+    """ Vrne True če je niz število. """
+    try:
+        float(n)
+        return True
+    except ValueError:
+        return False
 
 @bottle.error(404)
 def error_404(error):
     return 'Ta stran ne obstaja!'
- #TODO: premisli glede nacina
+ #TODO: Popravi dodajanje
 bottle.run(reloader=True, debug=True)
 
 
