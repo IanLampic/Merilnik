@@ -150,7 +150,7 @@ def ali_je_stevilo(n):
 @bottle.error(404)
 def error_404(error):
     return 'Ta stran ne obstaja!'
- #TODO: Popravi dodajanje
+
 bottle.run(reloader=True, debug=True)
 
 
